@@ -1,14 +1,18 @@
 import { connect as 连接 } from "cloudflare:sockets";
-const UUID = "你的UUID";
-const PROXYIP = "你的PROXYIP";
-const UUID字节 = (() => {
+let UUID = "00000000-0000-0000-0000-000000000000";
+let PROXYIP = "";
+let UUID字节;
+function 更新UUID字节(){
   const 十六进制 = UUID.replace(/-/g, "");
-  const 字节数组 = new Uint8Array(16);
-  for (let 索引 = 0; 索引 < 16; 索引++) {
-    字节数组[索引] = parseInt(十六进制.slice(索引 * 2, 索引 * 2 + 2), 16);
+  UUID字节 = new Uint8Array(16);
+
+  for(let 索引=0;索引<16;索引++){
+    UUID字节[索引]=parseInt(
+      十六进制.slice(索引*2,索引*2+2),
+      16
+    );
   }
-  return 字节数组;
-})();
+}
 function UUID相等(甲,乙){
   if(甲.length!==16||乙.length!==16){
     return false;
@@ -80,6 +84,9 @@ async function 获取网套数据(数据){
 }
 function 解析微列死(缓冲区){
   const 数据=new Uint8Array(缓冲区);
+  if(!UUID相等(数据.subarray(1,17),UUID字节)){
+    throw new Error("UUID错误");
+    }
   const 版本=数据[0];
   const 附加长度=数据[17];
   let 偏移=18+附加长度;
@@ -145,7 +152,14 @@ async function 关闭套接字(套接字){
 async function 处理网套请求(请求){
   const 网址对象=new URL(请求.url);
   const 自定义代理地址=获取自定义代理IP(网址对象.pathname);
-  const 代理地址=自定义代理地址||PROXYIP;
+  let 代理地址=自定义代理地址||PROXYIP;
+  if(!代理地址){
+  try{
+    const 响应=await fetch("https://ipinfo.io");
+    const 信息=await 响应.json();
+    代理地址=信息.ip;
+     }catch{}
+    }
   const 代理=解析代理IP(代理地址);
   const 网套组=new WebSocketPair();
   const 客户端=网套组[0];
@@ -415,7 +429,10 @@ async function 处理网套请求(请求){
   });
 }
 export default{
-  async fetch(请求){
+  async fetch(请求,env){
+    UUID = env.uuid || UUID;
+    PROXYIP = env.pyip || PROXYIP;
+    更新UUID字节();
     const 网址对象=new URL(请求.url);
     const 路径=
       decodeURIComponent(
@@ -435,11 +452,9 @@ export default{
     ){
       return 处理网套请求(请求);
     }
-    if(路径===`/${UUID}`){
+    if(路径===`/${UUID}`||路径===`/${UUID}/`){
       return new Response("OK");
     }
-    return new Response(
-      "Hello World!"
-    );
+    return fetch("https://www.cctv.com");
   }
 };
