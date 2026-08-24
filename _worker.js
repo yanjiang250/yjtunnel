@@ -155,7 +155,7 @@ async function 处理网套请求(请求){
   let 代理地址=自定义代理地址||PROXYIP;
   if(!代理地址){
   try{
-    const 响应=await fetch("https://ipinfo.io");
+    const 响应=await fetch("https://api.ipapi.is");
     const 信息=await 响应.json();
     代理地址=信息.ip;
      }catch{}
