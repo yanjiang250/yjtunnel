@@ -14,7 +14,7 @@
 ## 三：自定义proxyip
 当proxyip留空时，```_worker.js```会自动获取proxyip
 
-虽说脚本默认留空proxyip，但同时也支持自定义proxyip
+虽说脚本会自动获取proxyip，但同时也支持自定义proxyip
 
 支持IPV4、IPV6、域名三种方式（端口为443时，可不写:端口）
 
